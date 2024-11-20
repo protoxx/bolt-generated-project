@@ -17,16 +17,18 @@ export default function Layout() {
               <Link to="/" className="flex items-center">
                 <span className="text-2xl font-bold text-blue-600">AI Tools Hub</span>
               </Link>
+              <div className="hidden md:flex md:ml-8 space-x-8">
+                <Link to="/tools" className="text-gray-600 hover:text-gray-900">
+                  Tools
+                </Link>
+                <Link to="/compare" className="text-gray-600 hover:text-gray-900">
+                  Compare
+                </Link>
+              </div>
             </div>
 
             {/* Desktop menu */}
             <div className="hidden md:flex md:items-center md:space-x-8">
-              <Link to="/tools" className="text-gray-600 hover:text-gray-900">
-                Tools
-              </Link>
-              <Link to="/compare" className="text-gray-600 hover:text-gray-900">
-                Compare
-              </Link>
               {user ? (
                 <div className="flex items-center space-x-4">
                   <Link to="/profile">
