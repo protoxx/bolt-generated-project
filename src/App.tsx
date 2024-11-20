@@ -5,7 +5,11 @@ import Layout from './components/Layout'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Profile from './pages/Profile'
 import ToolDetail from './pages/ToolDetail'
+import Compare from './pages/Compare'
+import Search from './pages/Search'
+import AdminDashboard from './pages/admin/Dashboard'
 
 export default function App() {
   return (
@@ -16,8 +20,12 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
+            <Route path="profile" element={<Profile />} />
             <Route path="tool/:id" element={<ToolDetail />} />
+            <Route path="compare" element={<Compare />} />
+            <Route path="search" element={<Search />} />
           </Route>
+          <Route path="/admin/*" element={<AdminDashboard />} />
         </Routes>
       </FavoritesProvider>
     </AuthProvider>

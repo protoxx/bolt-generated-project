@@ -1,12 +1,16 @@
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { mockTools } from '../data/mockData'
+import ReviewForm from '../components/ReviewForm'
+import ReviewCard from '../components/ReviewCard'
 
 export default function ToolDetail() {
   const { id } = useParams()
   const { user } = useAuth()
   const { favorites, toggleFavorite } = useFavorites()
+  const [activeTab, setActiveTab] = useState<'overview' | 'reviews'>('overview')
   
   const tool = mockTools.find(t => t.id === id)
   
@@ -19,6 +23,11 @@ export default function ToolDetail() {
   }
 
   const isFavorite = favorites.includes(tool.id)
+
+  const handleReviewSubmit = (review: { rating: number; comment: string }) => {
+    // TODO: Implement review submission
+    console.log('New review:', review)
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -51,35 +60,86 @@ export default function ToolDetail() {
               </button>
             )}
           </div>
-          <div className="flex gap-2 mb-4">
-            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-              {tool.category}
-            </span>
-            {tool.pricing && (
-              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                {tool.pricing}
-              </span>
-            )}
+
+          <div className="border-b border-gray-200 mb-6">
+            <nav className="flex gap-8">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`pb-4 px-2 ${
+                  activeTab === 'overview'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-500'
+                }`}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('reviews')}
+                className={`pb-4 px-2 ${
+                  activeTab === 'reviews'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-500'
+                }`}
+              >
+                Reviews
+              </button>
+            </nav>
           </div>
-          <p className="text-gray-600 mb-6">{tool.description}</p>
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Key Features</h2>
-            <ul className="list-disc list-inside space-y-2 text-gray-600">
-              {tool.features?.map((feature, index) => (
-                <li key={index}>{feature}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="mt-8">
-            <a
-              href={tool.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Visit Website
-            </a>
-          </div>
+
+          {activeTab === 'overview' && (
+            <>
+              <div className="flex gap-2 mb-4">
+                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                  {tool.category}
+                </span>
+                {tool.pricing && (
+                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                    {tool.pricing}
+                  </span>
+                )}
+              </div>
+              <p className="text-gray-600 mb-6">{tool.description}</p>
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold">Key Features</h2>
+                <ul className="list-disc list-inside space-y-2 text-gray-600">
+                  {tool.features?.map((feature, index) => (
+                    <li key={index}>{feature}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-8">
+                <a
+                  href={tool.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Visit Website
+                </a>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'reviews' && (
+            <div className="space-y-8">
+              {user && (
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
+                  <ReviewForm toolId={tool.id} onSubmit={handleReviewSubmit} />
+                </div>
+              )}
+              <div className="space-y-6">
+                {tool.reviews?.map(review => (
+                  <ReviewCard key={review.id} review={review} />
+                ))}
+                {(!tool.reviews || tool.reviews.length === 0) && (
+                  <p className="text-center text-gray-500 py-8">
+                    No reviews yet. Be the first to review this tool!
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
