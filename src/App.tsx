@@ -12,7 +12,6 @@ import ToolDetail from './pages/ToolDetail'
 import Search from './pages/Search'
 import AdminLogin from './pages/admin/Login'
 import AdminDashboard from './pages/admin/Dashboard'
-import AdminLayout from './components/admin/AdminLayout'
 
 export default function App() {
   return (
@@ -32,14 +31,8 @@ export default function App() {
           </Route>
           
           {/* Admin Routes */}
-          <Route path="/admin">
-            <Route path="login" element={<AdminLogin />} />
-            <Route path="dashboard" element={
-              <AdminLayout>
-                <AdminDashboard />
-              </AdminLayout>
-            } />
-          </Route>
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/*" element={<AdminDashboard />} />
         </Routes>
       </FavoritesProvider>
     </AuthProvider>

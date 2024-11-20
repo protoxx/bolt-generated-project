@@ -25,33 +25,40 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div>
-      <div className="mb-8 border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {[
-            { id: 'overview', name: 'Overview' },
-            { id: 'tools', name: 'Tools' },
-            { id: 'reviews', name: 'Reviews' },
-            { id: 'users', name: 'Users' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as TabType)}
-              className={`
-                whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm
-                ${activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }
-              `}
-            >
-              {tab.name}
-            </button>
-          ))}
-        </nav>
-      </div>
+    <div className="min-h-screen bg-gray-100">
+      <div className="flex">
+        {/* Sidebar */}
+        <div className="w-64 bg-white h-screen shadow-md fixed">
+          <div className="p-4">
+            <h2 className="text-xl font-bold text-gray-800">Admin Dashboard</h2>
+          </div>
+          <nav className="mt-4">
+            {[
+              { id: 'overview', label: 'Overview' },
+              { id: 'tools', label: 'Manage Tools' },
+              { id: 'reviews', label: 'Manage Reviews' },
+              { id: 'users', label: 'Manage Users' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as TabType)}
+                className={`w-full text-left px-4 py-2 ${
+                  activeTab === tab.id 
+                    ? 'bg-blue-50 text-blue-600' 
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
 
-      {renderContent()}
+        {/* Main Content */}
+        <div className="ml-64 flex-1 p-8">
+          {renderContent()}
+        </div>
+      </div>
     </div>
   )
 }
