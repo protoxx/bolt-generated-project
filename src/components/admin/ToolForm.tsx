@@ -5,9 +5,10 @@ import Button from '../ui/Button'
 interface ToolFormProps {
   tool?: Tool;
   onClose: () => void;
+  onSubmit: (toolData: Partial<Tool>) => void;
 }
 
-export default function ToolForm({ tool, onClose }: ToolFormProps) {
+export default function ToolForm({ tool, onClose, onSubmit }: ToolFormProps) {
   const [formData, setFormData] = useState({
     name: tool?.name || '',
     description: tool?.description || '',
@@ -20,12 +21,15 @@ export default function ToolForm({ tool, onClose }: ToolFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement save functionality
-    console.log('Save tool:', {
-      ...formData,
+    onSubmit({
+      name: formData.name,
+      description: formData.description,
+      website: formData.website,
+      category: formData.category,
+      pricing: formData.pricing,
+      imageUrl: formData.imageUrl,
       features: formData.features.split('\n').filter(f => f.trim())
     })
-    onClose()
   }
 
   return (
@@ -65,13 +69,20 @@ export default function ToolForm({ tool, onClose }: ToolFormProps) {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Category</label>
-          <input
-            type="text"
+          <select
             value={formData.category}
             onChange={e => setFormData({ ...formData, category: e.target.value })}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
             required
-          />
+          >
+            <option value="">Select a category</option>
+            <option value="Language Models">Language Models</option>
+            <option value="Image Generation">Image Generation</option>
+            <option value="Writing">Writing</option>
+            <option value="Audio Processing">Audio Processing</option>
+            <option value="Video Creation">Video Creation</option>
+            <option value="Development">Development</option>
+          </select>
         </div>
       </div>
 
@@ -119,7 +130,7 @@ export default function ToolForm({ tool, onClose }: ToolFormProps) {
         <Button
           type="submit"
         >
-          Save
+          {tool ? 'Save Changes' : 'Add Tool'}
         </Button>
       </div>
     </form>
