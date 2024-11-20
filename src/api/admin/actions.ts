@@ -1,11 +1,11 @@
-import { toolQueries, userQueries, reviewQueries } from '../../lib/db'
+import { dbQueries } from '../../lib/db'
 
 export const adminActions = {
   // Tools actions
   tools: {
     getAll: () => {
       try {
-        return toolQueries.getAll.all(100, 0) // Récupère tous les outils pour l'admin
+        return dbQueries.tools.getAll.all()
       } catch (error) {
         console.error('Error getting tools:', error)
         return []
@@ -17,7 +17,7 @@ export const adminActions = {
         const id = crypto.randomUUID()
         const features = JSON.stringify(toolData.features || [])
         
-        toolQueries.create.run(
+        dbQueries.tools.create.run(
           id,
           toolData.name,
           toolData.description,
@@ -39,7 +39,7 @@ export const adminActions = {
       try {
         const features = JSON.stringify(toolData.features || [])
         
-        toolQueries.update.run(
+        dbQueries.tools.update.run(
           toolData.name,
           toolData.description,
           toolData.website,
@@ -59,7 +59,7 @@ export const adminActions = {
 
     delete: (id: string) => {
       try {
-        toolQueries.delete.run(id)
+        dbQueries.tools.delete.run(id)
         return { success: true }
       } catch (error) {
         console.error('Error deleting tool:', error)
@@ -72,7 +72,7 @@ export const adminActions = {
   users: {
     getAll: () => {
       try {
-        return db.prepare('SELECT * FROM users ORDER BY created_at DESC').all()
+        return dbQueries.users.getAll.all()
       } catch (error) {
         console.error('Error getting users:', error)
         return []
@@ -81,7 +81,7 @@ export const adminActions = {
 
     updateRole: (userId: string, role: string) => {
       try {
-        db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, userId)
+        dbQueries.users.updateRole.run(role, userId)
         return { success: true }
       } catch (error) {
         console.error('Error updating user role:', error)
@@ -91,7 +91,7 @@ export const adminActions = {
 
     delete: (userId: string) => {
       try {
-        db.prepare('DELETE FROM users WHERE id = ?').run(userId)
+        dbQueries.users.delete.run(userId)
         return { success: true }
       } catch (error) {
         console.error('Error deleting user:', error)
@@ -104,13 +104,7 @@ export const adminActions = {
   reviews: {
     getAll: () => {
       try {
-        return db.prepare(`
-          SELECT r.*, t.name as tool_name, u.name as user_name
-          FROM reviews r
-          JOIN tools t ON r.tool_id = t.id
-          JOIN users u ON r.user_id = u.id
-          ORDER BY r.created_at DESC
-        `).all()
+        return dbQueries.reviews.getAll.all()
       } catch (error) {
         console.error('Error getting reviews:', error)
         return []
@@ -119,7 +113,7 @@ export const adminActions = {
 
     updateStatus: (reviewId: string, status: string) => {
       try {
-        reviewQueries.updateStatus.run(status, reviewId)
+        dbQueries.reviews.updateStatus.run(status, reviewId)
         return { success: true }
       } catch (error) {
         console.error('Error updating review status:', error)
@@ -129,7 +123,7 @@ export const adminActions = {
 
     delete: (reviewId: string) => {
       try {
-        db.prepare('DELETE FROM reviews WHERE id = ?').run(reviewId)
+        dbQueries.reviews.delete.run(reviewId)
         return { success: true }
       } catch (error) {
         console.error('Error deleting review:', error)

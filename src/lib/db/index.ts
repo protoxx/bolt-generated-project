@@ -1,175 +1,138 @@
 import Database from 'better-sqlite3'
-import fs from 'fs'
-import path from 'path'
 
-// Initialize database
-const db = new Database('aitools.db')
+const db = new Database(':memory:') // Using in-memory database for WebContainer
 
 // Enable foreign keys
 db.pragma('foreign_keys = ON')
 
-// Load and execute schema
-const schema = fs.readFileSync(
-  path.join(process.cwd(), 'src/lib/db/schema.sql'),
-  'utf8'
-)
-db.exec(schema)
+// Create tables
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    name TEXT,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT DEFAULT 'user',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 
-// Prepared statements for tools
-export const toolQueries = {
-  create: db.prepare(`
-    INSERT INTO tools (id, name, description, website, category, pricing, image_url, features)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `),
+  CREATE TABLE IF NOT EXISTS tools (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    website TEXT NOT NULL,
+    category TEXT NOT NULL,
+    pricing TEXT,
+    image_url TEXT,
+    features TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 
-  update: db.prepare(`
-    UPDATE tools
-    SET name = ?, description = ?, website = ?, category = ?, 
-        pricing = ?, image_url = ?, features = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `),
+  CREATE TABLE IF NOT EXISTS reviews (
+    id TEXT PRIMARY KEY,
+    tool_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+    comment TEXT,
+    status TEXT DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tool_id) REFERENCES tools(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+`)
 
-  delete: db.prepare('DELETE FROM tools WHERE id = ?'),
+// Database queries
+export const dbQueries = {
+  tools: {
+    getAll: db.prepare(`
+      SELECT t.*, 
+             COUNT(DISTINCT r.id) as review_count,
+             AVG(r.rating) as average_rating
+      FROM tools t
+      LEFT JOIN reviews r ON t.id = r.tool_id
+      GROUP BY t.id
+      ORDER BY t.created_at DESC
+    `),
 
-  getById: db.prepare(`
-    SELECT t.*, 
-           COUNT(DISTINCT r.id) as review_count,
-           AVG(r.rating) as average_rating,
-           COUNT(DISTINCT f.user_id) as favorite_count
-    FROM tools t
-    LEFT JOIN reviews r ON t.id = r.tool_id AND r.status = 'approved'
-    LEFT JOIN favorites f ON t.id = f.tool_id
-    WHERE t.id = ?
-    GROUP BY t.id
-  `),
+    getById: db.prepare(`
+      SELECT * FROM tools WHERE id = ?
+    `),
 
-  getAll: db.prepare(`
-    SELECT t.*, 
-           COUNT(DISTINCT r.id) as review_count,
-           AVG(r.rating) as average_rating,
-           COUNT(DISTINCT f.user_id) as favorite_count
-    FROM tools t
-    LEFT JOIN reviews r ON t.id = r.tool_id AND r.status = 'approved'
-    LEFT JOIN favorites f ON t.id = f.tool_id
-    GROUP BY t.id
-    ORDER BY t.created_at DESC
-    LIMIT ? OFFSET ?
-  `),
+    create: db.prepare(`
+      INSERT INTO tools (id, name, description, website, category, pricing, image_url, features)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `),
 
-  search: db.prepare(`
-    SELECT t.*, 
-           COUNT(DISTINCT r.id) as review_count,
-           AVG(r.rating) as average_rating
-    FROM tools t
-    LEFT JOIN reviews r ON t.id = r.tool_id AND r.status = 'approved'
-    WHERE t.name LIKE ? OR t.description LIKE ?
-    GROUP BY t.id
-    ORDER BY t.created_at DESC
-    LIMIT ? OFFSET ?
-  `),
+    update: db.prepare(`
+      UPDATE tools
+      SET name = ?, description = ?, website = ?, category = ?, 
+          pricing = ?, image_url = ?, features = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `),
 
-  getByCategory: db.prepare(`
-    SELECT t.*, 
-           COUNT(DISTINCT r.id) as review_count,
-           AVG(r.rating) as average_rating
-    FROM tools t
-    LEFT JOIN reviews r ON t.id = r.tool_id AND r.status = 'approved'
-    WHERE t.category = ?
-    GROUP BY t.id
-    ORDER BY t.created_at DESC
-    LIMIT ? OFFSET ?
-  `)
-}
+    delete: db.prepare(`
+      DELETE FROM tools WHERE id = ?
+    `)
+  },
 
-// Prepared statements for reviews
-export const reviewQueries = {
-  create: db.prepare(`
-    INSERT INTO reviews (id, tool_id, user_id, rating, comment)
-    VALUES (?, ?, ?, ?, ?)
-  `),
+  users: {
+    getAll: db.prepare(`
+      SELECT * FROM users ORDER BY created_at DESC
+    `),
 
-  update: db.prepare(`
-    UPDATE reviews
-    SET rating = ?, comment = ?
-    WHERE id = ? AND user_id = ?
-  `),
+    getById: db.prepare(`
+      SELECT * FROM users WHERE id = ?
+    `),
 
-  updateStatus: db.prepare(`
-    UPDATE reviews
-    SET status = ?
-    WHERE id = ?
-  `),
+    getByEmail: db.prepare(`
+      SELECT * FROM users WHERE email = ?
+    `),
 
-  getByTool: db.prepare(`
-    SELECT r.*, u.name as user_name
-    FROM reviews r
-    JOIN users u ON r.user_id = u.id
-    WHERE r.tool_id = ? AND r.status = 'approved'
-    ORDER BY r.created_at DESC
-    LIMIT ? OFFSET ?
-  `),
+    create: db.prepare(`
+      INSERT INTO users (id, name, email, password, role)
+      VALUES (?, ?, ?, ?, ?)
+    `),
 
-  getByUser: db.prepare(`
-    SELECT r.*, t.name as tool_name
-    FROM reviews r
-    JOIN tools t ON r.tool_id = t.id
-    WHERE r.user_id = ?
-    ORDER BY r.created_at DESC
-    LIMIT ? OFFSET ?
-  `)
-}
+    updateRole: db.prepare(`
+      UPDATE users SET role = ? WHERE id = ?
+    `),
 
-// Prepared statements for users
-export const userQueries = {
-  create: db.prepare(`
-    INSERT INTO users (id, name, email, password, role)
-    VALUES (?, ?, ?, ?, ?)
-  `),
+    delete: db.prepare(`
+      DELETE FROM users WHERE id = ?
+    `)
+  },
 
-  update: db.prepare(`
-    UPDATE users
-    SET name = ?, email = ?
-    WHERE id = ?
-  `),
+  reviews: {
+    getAll: db.prepare(`
+      SELECT r.*, t.name as tool_name, u.name as user_name
+      FROM reviews r
+      JOIN tools t ON r.tool_id = t.id
+      JOIN users u ON r.user_id = u.id
+      ORDER BY r.created_at DESC
+    `),
 
-  getByEmail: db.prepare('SELECT * FROM users WHERE email = ?'),
-  
-  getById: db.prepare('SELECT * FROM users WHERE id = ?'),
+    getByTool: db.prepare(`
+      SELECT r.*, u.name as user_name
+      FROM reviews r
+      JOIN users u ON r.user_id = u.id
+      WHERE r.tool_id = ?
+      ORDER BY r.created_at DESC
+    `),
 
-  addFavorite: db.prepare(`
-    INSERT INTO favorites (user_id, tool_id)
-    VALUES (?, ?)
-  `),
+    create: db.prepare(`
+      INSERT INTO reviews (id, tool_id, user_id, rating, comment)
+      VALUES (?, ?, ?, ?, ?)
+    `),
 
-  removeFavorite: db.prepare(`
-    DELETE FROM favorites
-    WHERE user_id = ? AND tool_id = ?
-  `),
+    updateStatus: db.prepare(`
+      UPDATE reviews SET status = ? WHERE id = ?
+    `),
 
-  getFavorites: db.prepare(`
-    SELECT t.*
-    FROM favorites f
-    JOIN tools t ON f.tool_id = t.id
-    WHERE f.user_id = ?
-    ORDER BY f.created_at DESC
-  `)
-}
-
-// Helper function to run queries with pagination
-export const paginate = (
-  query: any,
-  page: number = 1,
-  limit: number = 10,
-  ...params: any[]
-) => {
-  const offset = (page - 1) * limit
-  return query.all(...params, limit, offset)
-}
-
-// Helper function to get total count for pagination
-export const getTotal = (table: string, condition?: string, params?: any[]) => {
-  const sql = `SELECT COUNT(*) as total FROM ${table} ${condition || ''}`
-  return db.prepare(sql).get(...(params || [])).total
+    delete: db.prepare(`
+      DELETE FROM reviews WHERE id = ?
+    `)
+  }
 }
 
 export default db
