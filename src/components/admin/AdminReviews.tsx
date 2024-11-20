@@ -1,61 +1,92 @@
-import { mockTools } from '../../data/mockData'
+import { useState, useEffect } from 'react'
+import { adminActions } from '../../api/admin/actions'
 
 export default function AdminReviews() {
-  const allReviews = mockTools.flatMap(tool => 
-    (tool.reviews || []).map(review => ({
-      ...review,
-      toolName: tool.name
-    }))
-  )
+  const [reviews, setReviews] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleDelete = (reviewId: string) => {
-    // TODO: Implement delete functionality
-    console.log('Delete review:', reviewId)
+  useEffect(() => {
+    loadReviews()
+  }, [])
+
+  const loadReviews = async () => {
+    setIsLoading(true)
+    const reviewsList = await adminActions.reviews.getAll()
+    setReviews(reviewsList)
+    setIsLoading(false)
+  }
+
+  const handleStatusChange = async (reviewId: string, status: string) => {
+    const result = await adminActions.reviews.updateStatus(reviewId, status)
+    if (result.success) {
+      await loadReviews()
+    }
+  }
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (window.confirm('Are you sure you want to delete this review?')) {
+      const result = await adminActions.reviews.delete(reviewId)
+      if (result.success) {
+        await loadReviews()
+      }
+    }
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>
   }
 
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">Manage Reviews</h2>
-      
-      <div className="bg-white rounded-lg shadow">
-        <table className="min-w-full">
-          <thead>
-            <tr className="border-b">
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Tool</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">User</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Rating</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Comment</th>
-              <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">Actions</th>
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Tool
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                User
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Rating
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Status
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody>
-            {allReviews.map((review) => (
-              <tr key={review.id} className="border-b">
-                <td className="px-6 py-4 whitespace-nowrap">{review.toolName}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{review.user.name}</td>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {reviews.map((review: any) => (
+              <tr key={review.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <svg
-                        key={star}
-                        className={`w-5 h-5 ${
-                          star <= review.rating ? 'text-yellow-400' : 'text-gray-300'
-                        }`}
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                      </svg>
-                    ))}
-                  </div>
+                  {review.tool_name}
                 </td>
-                <td className="px-6 py-4">
-                  <div className="max-w-xs truncate">{review.comment}</div>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {review.user_name}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {review.rating} / 5
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <select
+                    value={review.status}
+                    onChange={(e) => handleStatusChange(review.id, e.target.value)}
+                    className="rounded-md border-gray-300 text-sm"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
-                    onClick={() => handleDelete(review.id)}
-                    className="text-red-600 hover:text-red-800"
+                    onClick={() => handleDeleteReview(review.id)}
+                    className="text-red-600 hover:text-red-900"
                   >
                     Delete
                   </button>
