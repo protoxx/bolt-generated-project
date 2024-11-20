@@ -13,10 +13,12 @@ model User {
   email         String    @unique
   password      String
   image         String?
+  role          Role      @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   reviews       Review[]
   favorites     Tool[]    @relation("UserFavorites")
+  notifications Notification[]
 }
 
 model Tool {
@@ -25,8 +27,11 @@ model Tool {
   description String
   website     String
   category    String
-  pricing     String?
+  pricing     Json?
   imageUrl    String?
+  features    String[]
+  metrics     Json?
+  specs       Json?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   reviews     Review[]
@@ -37,10 +42,33 @@ model Review {
   id        String   @id @default(cuid())
   rating    Int
   comment   String?
-  userId    String
-  toolId    String
+  status    ReviewStatus @default(PENDING)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  userId    String
+  toolId    String
   user      User     @relation(fields: [userId], references: [id])
   tool      Tool     @relation(fields: [toolId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
