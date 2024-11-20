@@ -1,64 +1,134 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Tool } from '../../types'
+import Button from '../ui/Button'
 import { mockTools } from '../../data/mockData'
-import AdminToolForm from './AdminToolForm'
 
 export default function AdminToolList() {
+  const [tools, setTools] = useState<Tool[]>(mockTools)
   const [isAddingTool, setIsAddingTool] = useState(false)
-  const [editingTool, setEditingTool] = useState<string | null>(null)
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
+
+  const filteredTools = tools.filter(tool => {
+    const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tool.description.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = !selectedCategory || tool.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
+
+  const categories = Array.from(new Set(tools.map(tool => tool.category)))
 
   const handleDelete = (id: string) => {
-    // TODO: Implement delete functionality
-    console.log('Delete tool:', id)
+    if (window.confirm('Are you sure you want to delete this tool?')) {
+      setTools(tools.filter(tool => tool.id !== id))
+    }
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Manage Tools</h2>
-        <button
-          onClick={() => setIsAddingTool(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-        >
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">Manage Tools</h2>
+        <Button onClick={() => setIsAddingTool(true)}>
           Add New Tool
-        </button>
+        </Button>
       </div>
 
-      {(isAddingTool || editingTool) && (
-        <AdminToolForm
-          tool={editingTool ? mockTools.find(t => t.id === editingTool) : undefined}
-          onClose={() => {
-            setIsAddingTool(false)
-            setEditingTool(null)
-          }}
-        />
-      )}
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <input
+            type="text"
+            placeholder="Search tools..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+        <div>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">All Categories</option>
+            {categories.map(category => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
-      <div className="bg-white rounded-lg shadow">
-        <table className="min-w-full">
-          <thead>
-            <tr className="border-b">
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Name</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Category</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Pricing</th>
-              <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">Actions</th>
+      {/* Tools Table */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Tool
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Category
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Pricing
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Reviews
+              </th>
+              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody>
-            {mockTools.map((tool) => (
-              <tr key={tool.id} className="border-b">
-                <td className="px-6 py-4 whitespace-nowrap">{tool.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{tool.category}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{tool.pricing}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredTools.map((tool) => (
+              <tr key={tool.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    {tool.imageUrl && (
+                      <div className="flex-shrink-0 h-10 w-10">
+                        <img
+                          className="h-10 w-10 rounded-full object-cover"
+                          src={tool.imageUrl}
+                          alt={tool.name}
+                        />
+                      </div>
+                    )}
+                    <div className="ml-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {tool.name}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {tool.website}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                    {tool.category}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {tool.pricing}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {tool.reviews?.length || 0} reviews
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
-                    onClick={() => setEditingTool(tool.id)}
-                    className="text-blue-600 hover:text-blue-800 mr-4"
+                    onClick={() => setSelectedTool(tool)}
+                    className="text-blue-600 hover:text-blue-900 mr-4"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(tool.id)}
-                    className="text-red-600 hover:text-red-800"
+                    className="text-red-600 hover:text-red-900"
                   >
                     Delete
                   </button>
@@ -68,6 +138,33 @@ export default function AdminToolList() {
           </tbody>
         </table>
       </div>
+
+      {/* Add/Edit Tool Modal */}
+      {(isAddingTool || selectedTool) && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+            <h3 className="text-lg font-medium mb-4">
+              {selectedTool ? 'Edit Tool' : 'Add New Tool'}
+            </h3>
+            {/* Tool form will go here */}
+            <div className="flex justify-end mt-6">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setIsAddingTool(false)
+                  setSelectedTool(null)
+                }}
+                className="mr-2"
+              >
+                Cancel
+              </Button>
+              <Button>
+                {selectedTool ? 'Save Changes' : 'Add Tool'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -4,38 +4,9 @@ export interface Tool {
   description: string;
   website: string;
   category: string;
-  pricing?: {
-    free?: PricingTier;
-    basic?: PricingTier;
-    pro?: PricingTier;
-    enterprise?: PricingTier;
-  };
+  pricing?: string;
   imageUrl?: string;
   features?: string[];
-  metrics?: {
-    performance: number;
-    easeOfUse: number;
-    features: number;
-    valueForMoney: number;
-  };
-  specs?: {
-    hasApi: boolean;
-    exportFormats?: string[];
-    integrations?: string[];
-    supportOptions?: string[];
-    updateFrequency?: string;
-  };
-}
-
-interface PricingTier {
-  price: string;
-  features: string;
-}
-
-export interface User {
-  id: string;
-  name?: string;
-  email: string;
   reviews?: Review[];
 }
 
@@ -46,4 +17,11 @@ export interface Review {
   createdAt: string;
   user: User;
   tool: Tool;
+}
+
+export interface User {
+  id: string;
+  name?: string;
+  email: string;
+  role?: string;
 }
