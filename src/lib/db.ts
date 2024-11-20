@@ -1,125 +1,48 @@
-import Database from 'better-sqlite3'
-
-const db = new Database('aitools.db')
-
-// Initialize database tables
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    email TEXT UNIQUE,
-    password TEXT,
-    role TEXT DEFAULT 'user',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS tools (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    description TEXT,
-    website TEXT,
-    category TEXT,
-    pricing TEXT,
-    image_url TEXT,
-    features TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS reviews (
-    id TEXT PRIMARY KEY,
-    user_id TEXT,
-    tool_id TEXT,
-    rating INTEGER,
-    comment TEXT,
-    status TEXT DEFAULT 'pending',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (tool_id) REFERENCES tools(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS favorites (
-    user_id TEXT,
-    tool_id TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, tool_id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (tool_id) REFERENCES tools(id)
-  );
-`)
+// Add these queries to the existing queries object
 
 export const queries = {
-  // User queries
-  createUser: db.prepare(`
-    INSERT INTO users (id, name, email, password, role)
-    VALUES (?, ?, ?, ?, ?)
+  // ... (previous queries)
+
+  // Admin tool queries
+  getToolWithStats: db.prepare(`
+    SELECT 
+      t.*,
+      COUNT(DISTINCT r.id) as review_count,
+      COUNT(DISTINCT f.user_id) as favorite_count,
+      AVG(r.rating) as average_rating
+    FROM tools t
+    LEFT JOIN reviews r ON t.id = r.tool_id
+    LEFT JOIN favorites f ON t.id = f.tool_id
+    WHERE t.id = ?
+    GROUP BY t.id
   `),
 
-  getUserByEmail: db.prepare(`
-    SELECT * FROM users WHERE email = ?
-  `),
-
-  getUserById: db.prepare(`
-    SELECT * FROM users WHERE id = ?
-  `),
-
-  // Tool queries
-  getAllTools: db.prepare(`
-    SELECT * FROM tools
-    ORDER BY created_at DESC
-    LIMIT ? OFFSET ?
-  `),
-
-  getToolById: db.prepare(`
-    SELECT * FROM tools WHERE id = ?
-  `),
-
-  createTool: db.prepare(`
-    INSERT INTO tools (id, name, description, website, category, pricing, image_url, features)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `),
-
-  updateTool: db.prepare(`
+  updateToolStatus: db.prepare(`
     UPDATE tools
-    SET name = ?, description = ?, website = ?, category = ?, pricing = ?, image_url = ?, features = ?
+    SET status = ?
     WHERE id = ?
   `),
 
-  deleteTool: db.prepare(`
-    DELETE FROM tools WHERE id = ?
+  // Admin review queries
+  getPendingReviewCount: db.prepare(`
+    SELECT COUNT(*) as count
+    FROM reviews
+    WHERE status = 'pending'
   `),
 
-  // Review queries
-  getToolReviews: db.prepare(`
-    SELECT r.*, u.name as user_name
+  getReviewsByStatus: db.prepare(`
+    SELECT r.*, t.name as tool_name, u.name as user_name
     FROM reviews r
+    JOIN tools t ON r.tool_id = t.id
     JOIN users u ON r.user_id = u.id
-    WHERE r.tool_id = ? AND r.status = 'approved'
+    WHERE r.status = ?
     ORDER BY r.created_at DESC
     LIMIT ? OFFSET ?
   `),
 
-  createReview: db.prepare(`
-    INSERT INTO reviews (id, user_id, tool_id, rating, comment)
-    VALUES (?, ?, ?, ?, ?)
-  `),
-
-  // Favorites queries
-  addFavorite: db.prepare(`
-    INSERT INTO favorites (user_id, tool_id)
-    VALUES (?, ?)
-  `),
-
-  removeFavorite: db.prepare(`
-    DELETE FROM favorites
-    WHERE user_id = ? AND tool_id = ?
-  `),
-
-  getUserFavorites: db.prepare(`
-    SELECT t.*
-    FROM favorites f
-    JOIN tools t ON f.tool_id = t.id
-    WHERE f.user_id = ?
+  updateReviewStatus: db.prepare(`
+    UPDATE reviews
+    SET status = ?
+    WHERE id = ?
   `)
 }
-
-export default db
