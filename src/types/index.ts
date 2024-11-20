@@ -7,16 +7,8 @@ export interface Tool {
   pricing?: string;
   imageUrl?: string;
   features?: string[];
-  reviews?: Review[];
-}
-
-export interface Review {
-  id: string;
-  rating: number;
-  comment: string;
-  createdAt: string;
-  user: User;
-  tool: Tool;
+  reviews: Review[];
+  createdAt?: string;
 }
 
 export interface User {
@@ -24,4 +16,16 @@ export interface User {
   name?: string;
   email: string;
   role?: string;
+}
+
+export interface Review {
+  id: string;
+  toolId: string;
+  userId: string;
+  rating: number;
+  comment?: string;
+  status?: string;
+  createdAt: string;
+  user: User;
+  tool: Tool;
 }

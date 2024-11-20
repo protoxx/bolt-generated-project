@@ -1,134 +1,91 @@
-import { dbQueries } from '../../lib/db'
+import { mockTools, mockUsers, mockReviews } from '../../data/mockData'
+import { Tool, User, Review } from '../../types'
 
 export const adminActions = {
   // Tools actions
   tools: {
     getAll: () => {
-      try {
-        return dbQueries.tools.getAll.all()
-      } catch (error) {
-        console.error('Error getting tools:', error)
-        return []
-      }
+      return Promise.resolve(mockTools)
     },
 
-    create: (toolData: any) => {
-      try {
-        const id = crypto.randomUUID()
-        const features = JSON.stringify(toolData.features || [])
-        
-        dbQueries.tools.create.run(
-          id,
-          toolData.name,
-          toolData.description,
-          toolData.website,
-          toolData.category,
-          toolData.pricing,
-          toolData.imageUrl,
-          features
-        )
-        
-        return { success: true, id }
-      } catch (error) {
-        console.error('Error creating tool:', error)
-        return { success: false, error: 'Failed to create tool' }
-      }
+    create: (toolData: Partial<Tool>) => {
+      const newTool = {
+        id: crypto.randomUUID(),
+        ...toolData,
+        reviews: [],
+        createdAt: new Date().toISOString()
+      } as Tool
+      
+      mockTools.push(newTool)
+      return Promise.resolve({ success: true, id: newTool.id })
     },
 
-    update: (id: string, toolData: any) => {
-      try {
-        const features = JSON.stringify(toolData.features || [])
-        
-        dbQueries.tools.update.run(
-          toolData.name,
-          toolData.description,
-          toolData.website,
-          toolData.category,
-          toolData.pricing,
-          toolData.imageUrl,
-          features,
-          id
-        )
-        
-        return { success: true }
-      } catch (error) {
-        console.error('Error updating tool:', error)
-        return { success: false, error: 'Failed to update tool' }
+    update: (id: string, toolData: Partial<Tool>) => {
+      const index = mockTools.findIndex(tool => tool.id === id)
+      if (index !== -1) {
+        mockTools[index] = { ...mockTools[index], ...toolData }
+        return Promise.resolve({ success: true })
       }
+      return Promise.resolve({ success: false, error: 'Tool not found' })
     },
 
     delete: (id: string) => {
-      try {
-        dbQueries.tools.delete.run(id)
-        return { success: true }
-      } catch (error) {
-        console.error('Error deleting tool:', error)
-        return { success: false, error: 'Failed to delete tool' }
+      const index = mockTools.findIndex(tool => tool.id === id)
+      if (index !== -1) {
+        mockTools.splice(index, 1)
+        return Promise.resolve({ success: true })
       }
+      return Promise.resolve({ success: false, error: 'Tool not found' })
     }
   },
 
   // Users actions
   users: {
     getAll: () => {
-      try {
-        return dbQueries.users.getAll.all()
-      } catch (error) {
-        console.error('Error getting users:', error)
-        return []
-      }
+      return Promise.resolve(mockUsers)
     },
 
     updateRole: (userId: string, role: string) => {
-      try {
-        dbQueries.users.updateRole.run(role, userId)
-        return { success: true }
-      } catch (error) {
-        console.error('Error updating user role:', error)
-        return { success: false, error: 'Failed to update user role' }
+      const user = mockUsers.find(u => u.id === userId)
+      if (user) {
+        user.role = role
+        return Promise.resolve({ success: true })
       }
+      return Promise.resolve({ success: false, error: 'User not found' })
     },
 
     delete: (userId: string) => {
-      try {
-        dbQueries.users.delete.run(userId)
-        return { success: true }
-      } catch (error) {
-        console.error('Error deleting user:', error)
-        return { success: false, error: 'Failed to delete user' }
+      const index = mockUsers.findIndex(u => u.id === userId)
+      if (index !== -1) {
+        mockUsers.splice(index, 1)
+        return Promise.resolve({ success: true })
       }
+      return Promise.resolve({ success: false, error: 'User not found' })
     }
   },
 
   // Reviews actions
   reviews: {
     getAll: () => {
-      try {
-        return dbQueries.reviews.getAll.all()
-      } catch (error) {
-        console.error('Error getting reviews:', error)
-        return []
-      }
+      return Promise.resolve(mockReviews)
     },
 
     updateStatus: (reviewId: string, status: string) => {
-      try {
-        dbQueries.reviews.updateStatus.run(status, reviewId)
-        return { success: true }
-      } catch (error) {
-        console.error('Error updating review status:', error)
-        return { success: false, error: 'Failed to update review status' }
+      const review = mockReviews.find(r => r.id === reviewId)
+      if (review) {
+        review.status = status
+        return Promise.resolve({ success: true })
       }
+      return Promise.resolve({ success: false, error: 'Review not found' })
     },
 
     delete: (reviewId: string) => {
-      try {
-        dbQueries.reviews.delete.run(reviewId)
-        return { success: true }
-      } catch (error) {
-        console.error('Error deleting review:', error)
-        return { success: false, error: 'Failed to delete review' }
+      const index = mockReviews.findIndex(r => r.id === reviewId)
+      if (index !== -1) {
+        mockReviews.splice(index, 1)
+        return Promise.resolve({ success: true })
       }
+      return Promise.resolve({ success: false, error: 'Review not found' })
     }
   }
 }

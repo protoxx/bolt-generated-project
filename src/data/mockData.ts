@@ -1,4 +1,4 @@
-import { Tool } from '../types'
+import { Tool, User, Review } from '../types'
 
 export const mockTools: Tool[] = [
   {
@@ -14,16 +14,7 @@ export const mockTools: Tool[] = [
       'Content generation',
       'Code assistance'
     ],
-    reviews: [
-      {
-        id: '1',
-        rating: 5,
-        comment: 'Incredible tool for content creation and brainstorming.',
-        createdAt: '2023-12-01',
-        user: { id: '1', name: 'John Doe', email: 'john@example.com' },
-        tool: { id: '1', name: 'ChatGPT' } as Tool
-      }
-    ]
+    reviews: []
   },
   {
     id: '2',
@@ -39,20 +30,34 @@ export const mockTools: Tool[] = [
       'High-quality outputs'
     ],
     reviews: []
+  }
+]
+
+export const mockUsers: User[] = [
+  {
+    id: '1',
+    name: 'Admin User',
+    email: 'admin@example.com',
+    role: 'admin'
   },
   {
-    id: '3',
-    name: 'Copy.ai',
-    description: 'AI writing assistant for marketing copy',
-    website: 'https://copy.ai',
-    category: 'Writing',
-    pricing: 'Freemium',
-    imageUrl: 'https://example.com/copyai.jpg',
-    features: [
-      'Marketing copy generation',
-      'Blog post writing',
-      'Social media content'
-    ],
-    reviews: []
+    id: '2',
+    name: 'John Doe',
+    email: 'john@example.com',
+    role: 'user'
+  }
+]
+
+export const mockReviews: Review[] = [
+  {
+    id: '1',
+    toolId: '1',
+    userId: '2',
+    rating: 5,
+    comment: 'Great tool!',
+    status: 'approved',
+    createdAt: new Date().toISOString(),
+    user: mockUsers[1],
+    tool: mockTools[0]
   }
 ]
