@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Tool } from '../../types'
 import Button from '../ui/Button'
+import ToolForm from './ToolForm'
 import { mockTools } from '../../data/mockData'
 
 export default function AdminToolList() {
@@ -23,6 +24,32 @@ export default function AdminToolList() {
     if (window.confirm('Are you sure you want to delete this tool?')) {
       setTools(tools.filter(tool => tool.id !== id))
     }
+  }
+
+  const handleSubmit = (data: Partial<Tool>) => {
+    if (selectedTool) {
+      // Edit existing tool
+      setTools(tools.map(tool => 
+        tool.id === selectedTool.id 
+          ? { ...tool, ...data }
+          : tool
+      ))
+    } else {
+      // Add new tool
+      const newTool: Tool = {
+        id: crypto.randomUUID(),
+        name: data.name!,
+        description: data.description!,
+        website: data.website!,
+        category: data.category!,
+        pricing: data.pricing,
+        imageUrl: data.imageUrl,
+        features: data.features,
+      }
+      setTools([...tools, newTool])
+    }
+    setIsAddingTool(false)
+    setSelectedTool(null)
   }
 
   return (
@@ -141,27 +168,19 @@ export default function AdminToolList() {
 
       {/* Add/Edit Tool Modal */}
       {(isAddingTool || selectedTool) && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-medium mb-4">
               {selectedTool ? 'Edit Tool' : 'Add New Tool'}
             </h3>
-            {/* Tool form will go here */}
-            <div className="flex justify-end mt-6">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setIsAddingTool(false)
-                  setSelectedTool(null)
-                }}
-                className="mr-2"
-              >
-                Cancel
-              </Button>
-              <Button>
-                {selectedTool ? 'Save Changes' : 'Add Tool'}
-              </Button>
-            </div>
+            <ToolForm
+              tool={selectedTool || undefined}
+              onSubmit={handleSubmit}
+              onCancel={() => {
+                setIsAddingTool(false)
+                setSelectedTool(null)
+              }}
+            />
           </div>
         </div>
       )}
