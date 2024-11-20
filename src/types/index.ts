@@ -6,6 +6,7 @@ export interface Tool {
   category: string;
   pricing?: string;
   imageUrl?: string;
+  features?: string[];
 }
 
 export interface User {

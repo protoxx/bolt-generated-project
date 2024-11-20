@@ -1,6 +1,9 @@
 import { Link, Outlet } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 export default function Layout() {
+  const { user, logout } = useAuth()
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
@@ -12,18 +15,32 @@ export default function Layout() {
               </Link>
             </div>
             <div className="flex items-center gap-4">
-              <Link 
-                to="/login" 
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                Sign Up
-              </Link>
+              {user ? (
+                <>
+                  <span className="text-gray-600">Welcome, {user.name}</span>
+                  <button
+                    onClick={logout}
+                    className="text-gray-600 hover:text-gray-900"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link 
+                    to="/login" 
+                    className="text-gray-600 hover:text-gray-900"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </nav>
