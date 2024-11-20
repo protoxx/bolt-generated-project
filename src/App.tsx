@@ -18,14 +18,15 @@ export default function App() {
     <AuthProvider>
       <FavoritesProvider>
         <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="login" element={<Login />} />
-            <Route path="register" element={<Register />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="tool/:id" element={<ToolDetail />} />
-            <Route path="compare" element={<Compare />} />
-            <Route path="search" element={<Search />} />
+          {/* Main Routes */}
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/tool/:id" element={<ToolDetail />} />
+            <Route path="/compare" element={<Compare />} />
+            <Route path="/search" element={<Search />} />
           </Route>
           
           {/* Admin Routes */}

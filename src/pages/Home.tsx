@@ -4,7 +4,7 @@ import { mockTools } from '../data/mockData'
 
 export default function Home() {
   return (
-    <div>
+    <div className="bg-gray-50">
       <Hero />
       <FeaturedTools tools={mockTools} />
     </div>

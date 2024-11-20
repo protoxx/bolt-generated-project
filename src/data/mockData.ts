@@ -32,5 +32,21 @@ export const mockTools: Tool[] = [
       'Multiple iterations',
       'Community features'
     ]
+  },
+  {
+    id: '3',
+    name: 'Copy.ai',
+    description: 'AI writing assistant that helps create marketing copy, blog posts, and social media content.',
+    website: 'https://copy.ai',
+    category: 'Writing',
+    pricing: 'Freemium',
+    imageUrl: 'https://example.com/copyai.jpg',
+    features: [
+      'Marketing copy generation',
+      'Blog post writing',
+      'Social media content',
+      'Multiple languages',
+      'Templates library'
+    ]
   }
 ]
